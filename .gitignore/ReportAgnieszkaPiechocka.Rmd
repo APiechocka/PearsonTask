@@ -1,0 +1,144 @@
+---
+title: "Task_A_Piechocka"
+author: "Agnieszka Piechocka"
+date: "5 lutego 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+
+
+```
+
+## REPORT
+The main goal of this report is to analyse data about Pearson e-learning platform for English language learners and suggest changes than can improve it.
+
+The first and the most basic step is just to summarise every column of data we have.
+
+
+```{r nr1, echo=FALSE}
+dane <- read.csv("data/data2018.csv", head=TRUE, sep=";")
+
+
+summary(dane)
+
+ggplot(dane, aes(x = country)) +
+  geom_bar()
+
+```
+
+There is a huge demand for this platform in Turkey.  It may be a good idea to try to customize the platform for their needs and interest – e.g. articles in reading comprehension tasks about cooperation between Turkey and United Kingdom. In the future it could be done for other countries as well. 
+
+First we try to find a connection between data. 
+
+```{r nr2, echo=FALSE}
+in_course_summary<-dane %>% group_by(in_course) %>% summarise(N = n(), avg_score_total = mean(avg_score, na.rm=TRUE), complete_total = mean(completion, na.rm=TRUE), inv_total = mean(inv_rate, na.rm=TRUE))
+unit_summary<-dane %>% group_by(unit) %>% summarise(N = n(), avg_score_total = mean(avg_score, na.rm=TRUE), complete_total = mean(completion, na.rm=TRUE), inv_total = mean(inv_rate, na.rm=TRUE))
+
+ggplot(unit_summary, aes(x = unit, y=avg_score_total)) +
+  geom_point()
+ggplot(unit_summary, aes(x = unit, y=complete_total)) +
+  geom_point()
+ggplot(unit_summary, aes(x = unit, y=inv_total)) +
+  geom_point()
+
+```
+
+As the graphs above are not very informative, we are setting values, which will stand for a minimum for being considered as a high value (0.8 for average score and completion, inverse order equal 0). From them we can easily draw conclusions.
+
+```{r nr3, echo=FALSE}
+high_av <- dane %>%
+  mutate(high = avg_score > 0.8, na.rm=TRUE) 
+
+high_com <- dane %>%
+  mutate(highcom = completion > 0.8, na.rm=TRUE) 
+
+high_order<- dane %>%
+  mutate(highord = inv_rate==0, na.rm=TRUE) 
+
+
+high_av %>%
+  ggplot(aes(x = as.factor(in_course), fill= high)) + 
+  geom_bar(position = "fill") +
+  xlab("Teacher or without") + ylab("Proportion")
+
+
+
+```
+
+Students with teachers achieve high average of scores more often that students studying on their own. It may be a good idea to prepare online classes - videos when teachers are explaining some more difficult matters so individual users can benefit from them.
+
+```{r nr3b, echo=FALSE}
+high_av %>%
+  ggplot(aes(x = as.factor(unit), fill= high)) + 
+  geom_bar(position = "fill") +
+  xlab("Unit") + ylab("Proporcion")
+
+
+```
+
+The average score in general is higher in first units and then in revision. 
+
+```{r nr4, echo=FALSE}
+
+high_com %>%
+  ggplot(aes(x = as.factor(in_course), fill= highcom)) + 
+  geom_bar(position = "fill") +
+  xlab("Teacher or without") + ylab("Proportion")
+ 
+high_com %>%
+  ggplot(aes(x = as.factor(unit), fill= highcom)) + 
+  geom_bar(position = "fill") +
+  xlab("Unit") + ylab("Proportion")
+
+
+```
+
+Students with teachers are way better at completing exercises. There should be a special motivational system for students studying on their own (remainders about doing one unit every day, collecting points which users can change for discount on next course). 
+
+```{r nr4b, echo=FALSE}
+
+ 
+high_com %>%
+  ggplot(aes(x = as.factor(unit), fill= highcom)) + 
+  geom_bar(position = "fill") +
+  xlab("Unit") + ylab("Proportion")
+
+
+```
+
+
+Revision parts are almost always completed from the beginning till the end. Podcast are very rarely finished, almost everyone give up on them.  A good option to consider may be changing the length of podcast and make them shorter and/or changing the topics for more interesting/adequate.
+
+
+```{r nr5, echo=FALSE}
+
+high_order %>%
+  ggplot(aes(x = as.factor(in_course), fill= highord)) + 
+  geom_bar(position = "fill") +
+  xlab("Teacher or without") + ylab("Proportion")
+
+high_order %>%
+  ggplot(aes(x = as.factor(unit), fill= highord)) + 
+  geom_bar(position = "fill") +
+  xlab("Unit") + ylab("Proportion")
+
+```
+
+Following the order is more common in revision parts. The order should be well-thought-out in them.
+  
+  
+
+```{r nr7, echo=FALSE}
+
+dane2<- dane[complete.cases(dane),]
+
+cor(dane2[,c(5,6,7)])
+
+```
+
+We can’t really observe strong correlation between any of the category, but at least we know whether it’s negative or positive. Correlation between average score and completion is positive (the more exercise done, the higher the score is - we can publish this data to encourage students to do more excercises) and between average and order – negative (following the order helps to get higher score). There is also negative correlation between order and completion – the less we follow the order, the less probable is that we’ll finish the unit. 
+
